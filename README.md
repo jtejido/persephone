@@ -34,13 +34,17 @@ func (fsm *DoorFSM) UnlockAction() error {
 }
 
 func main() {
-	// initialize states, either do the things below inside the NewDoorFSM, init() or outside.
+	/*
+	 * The names act as unique identifier, the first added state is the machine's INITIAL_STATE.
+	 */
+	 
+	// initialize states and inputs, either do the things below, either inside the NewDoorFSM func, an init() func or outside.
+	
 	states := persephone.NewStates()
 	states.Add("opened", OPENED)
 	states.Add("closed", CLOSED)
 	states.Add("closedAndLocked", CLOSED_AND_LOCKED)
 
-	// initialize accepted inputs, either do the things below inside the NewDoorFSM, init() or outside.
 	inputs := persephone.NewInputs()
 	inputs.Add("open", OPEN)
 	inputs.Add("close", CLOSE)
@@ -54,7 +58,17 @@ func main() {
 	fsm.AddRule("opened", "close", "closed", nil)
 	fsm.AddRule("closed", "open", "opened", nil)
 	fsm.AddRule("closed", "lock", "closedAndLocked", nil)
-	fsm.AddRule("closedAndLocked", "unlock", "closed", fsm.UnlockAction)
+	fsm.AddRule("closedAndLocked", "unlock", "closed", fsm.UnlockAction) // fourth is trivial; guarding, error firing and stuff.
+	
+	// Callback on an action, say, actions that affects recognized input when a certain state is triggered.
+	fsm.AddInputAction("closedAndLocked", "unlock", fsm.UnlockAction)
+	
+	// Callback when a transition from src to dest state occured.
+	fsm.AddTransitionAction("closed", "opened", fsm.OpenAction)
+
+	// Entry and Exit actions
+	fsm.AddEntryAction("closed", fsm.CloseEntryAction)
+	fsm.AddExitAction("closed", fsm.CloseExitAction)
 
 	// sample process for the door
 	fsm.Process("close")
@@ -68,6 +82,10 @@ func main() {
 
 	fsm.Process("open")
 	fmt.Printf("%s \n\n", fsm.GetState().GetName()) // opened
+	
+	err:= fsm.Process("lock")
+	fmt.Printf("%s \n", err.Error()) // invalid input, can't lock the door when it's in opened state, this returns error.
+	fmt.Printf("%s \n\n", fsm.GetState().GetName()) // opened, no changes in state.
 }
 ```
 
@@ -75,4 +93,5 @@ func main() {
 ## Example
 
 Go to the sample DoorFSM for a classic FSM example.
+
 More examples to come.
