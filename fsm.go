@@ -16,7 +16,7 @@ type AbstractFSM struct {
 }
 
 func New(states *States, inputs *Inputs) *AbstractFSM {
-	return &AbstractFSM{
+	fsm := &AbstractFSM{
 		states:            states,
 		inputs:            inputs,
 		rules:             newRules(),
@@ -24,6 +24,16 @@ func New(states *States, inputs *Inputs) *AbstractFSM {
 		entryActions:      newEntryActions(),
 		transitionActions: newTransitionActions(),
 		exitActions:       newExitActions(),
+	}
+
+	fsm.init()
+
+	return fsm
+}
+
+func (qp *AbstractFSM) init() {
+	if qp.currentState == nil {
+		qp.currentState = qp.states.GetInitialState()
 	}
 }
 
@@ -51,12 +61,10 @@ func (qp *AbstractFSM) AddRule(sourceState, input, targetState string, inputActi
 
 	if err != nil {
 		qp.rules.addRule(newRule(src, in, tgt))
+	} else if r.isDestinationByInputDefined(input) {
+		panic("Rule for {state,input} pair is already defined.")
 	} else {
-		if r.isDestinationByInputDefined(input) {
-			panic("Rule for {state,input} pair is already defined.")
-		} else {
-			r.addTransition(in, tgt)
-		}
+		r.addTransition(in, tgt)
 	}
 
 	if inputAction != nil {
@@ -71,6 +79,10 @@ func (qp *AbstractFSM) AddEntryAction(state string, action FSMMethod) {
 	st, err := qp.states.GetStateByName(state)
 	if err != nil {
 		panic("Undefined state.")
+	}
+
+	if qp.entryActions == nil {
+		qp.entryActions = newEntryActions()
 	}
 
 	if ea, err := qp.entryActions.getActionsByStateName(st.GetName()); err != nil {
@@ -89,6 +101,10 @@ func (qp *AbstractFSM) AddExitAction(state string, action FSMMethod) {
 	st, err := qp.states.GetStateByName(state)
 	if err != nil {
 		panic("Undefined state.")
+	}
+
+	if qp.exitActions == nil {
+		qp.exitActions = newExitActions()
 	}
 
 	if ea, err := qp.exitActions.getActionsByStateName(st.GetName()); err != nil {
@@ -114,18 +130,18 @@ func (qp *AbstractFSM) AddInputAction(state, inputSymbol string, action FSMMetho
 		panic("Undefined input symbol: " + err_i.Error())
 	}
 
-	sia, err := qp.inputActions.getMapByStateName(src.GetName())
+	if qp.inputActions == nil {
+		qp.inputActions = newInputActions()
+	}
 
-	if err != nil {
+	if sia, err := qp.inputActions.getMapByStateName(src.GetName()); err != nil {
 		m := newSourceInputActionMap(src)
 		m.addMap(in, act)
 		qp.inputActions.addMap(m)
+	} else if ia, err := sia.getActionsByInputName(in.GetName()); err != nil {
+		sia.addMap(in, act)
 	} else {
-		if inAct, err_in := sia.getActionsByInputName(in.GetName()); err_in != nil {
-			sia.addMap(in, act)
-		} else {
-			inAct.addAction(act)
-		}
+		ia.addAction(act)
 	}
 
 }
@@ -143,28 +159,24 @@ func (qp *AbstractFSM) AddTransitionAction(sourceState, targetState string, acti
 		panic("Undefined target state: " + err_t.Error())
 	}
 
-	sta, err := qp.transitionActions.getMapBySourceName(src.GetName())
+	if qp.transitionActions == nil {
+		qp.transitionActions = newTransitionActions()
+	}
 
-	if err != nil {
+	if sta, err := qp.transitionActions.getMapBySourceName(src.GetName()); err != nil {
 		m := newSourceTargetActionMap(src)
 		m.addMap(tgt, act)
 		qp.transitionActions.addMap(m)
+	} else if ta, err := sta.getActionsByTargetName(tgt.GetName()); err != nil {
+		sta.addMap(tgt, act)
 	} else {
-		if tAct, err_in := sta.getActionsByTargetName(tgt.GetName()); err_in != nil {
-			sta.addMap(tgt, act)
-		} else {
-			tAct.addAction(act)
-		}
+		ta.addAction(act)
 	}
 
 }
 
 func (qp *AbstractFSM) Process(input string) error {
 	var targetState *State
-
-	if qp.currentState == nil {
-		qp.currentState = qp.states.GetInitialState()
-	}
 
 	in, err_i := qp.inputs.GetInputByName(input)
 
@@ -174,12 +186,10 @@ func (qp *AbstractFSM) Process(input string) error {
 
 	if r, err := qp.rules.getRuleBySourceName(qp.currentState.GetName()); err != nil {
 		return fmt.Errorf("There are no rules left for current state %s: %s", qp.currentState.GetName(), err.Error())
+	} else if !r.isDestinationByInputDefined(input) {
+		return fmt.Errorf("There are no other rules for {%s, %s} pair.", qp.currentState.GetName(), input)
 	} else {
-		if !r.isDestinationByInputDefined(input) {
-			return fmt.Errorf("There are no other rules for {%s, %s} pair.", qp.currentState.GetName(), input)
-		} else {
-			targetState = r.getTransitionByInputName(input).getDestination()
-		}
+		targetState = r.getTransitionByInputName(input).getDestination()
 	}
 
 	sourceState := qp.currentState
@@ -231,6 +241,18 @@ func (qp *AbstractFSM) Process(input string) error {
 	}
 
 	return nil
+}
+
+func (qp *AbstractFSM) Can(input string) (ok bool) {
+	if r, err := qp.rules.getRuleBySourceName(qp.currentState.GetName()); err != nil {
+		return
+	} else if !r.isDestinationByInputDefined(input) {
+		return
+	} else {
+		ok = true
+	}
+
+	return
 }
 
 func (qp *AbstractFSM) GetState() *State {

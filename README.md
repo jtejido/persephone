@@ -39,7 +39,7 @@ func main() {
 	 * The names act as unique identifier, the first added state is the machine's INITIAL_STATE.
 	 */
 	 
-	// initialize states and inputs, either do the things below, either inside the NewDoorFSM func, an init() func or outside.
+	// initialize states and inputs. You can do the things below, either inside the NewDoorFSM func, an init() func or outside.
 	
 	states := persephone.NewStates()
 	states.Add("opened", OPENED)
@@ -55,7 +55,7 @@ func main() {
 	// start the door
 	fsm := NewDoorFSM(states, inputs)
 
-	// Call convention pattern is utilized since AbstractFSM is already embedded.
+	// Call convention pattern is utilized as AbstractFSM is already embedded.
 	// add transition rules
 	fsm.AddRule("opened", "close", "closed", nil)
 	fsm.AddRule("closed", "open", "opened", nil)
@@ -68,7 +68,7 @@ func main() {
 	// Callback when a transition from src to dest state occured.
 	fsm.AddTransitionAction("closed", "opened", fsm.OpenAction)
 
-	// Entry and Exit actions
+	// Entry and Exit actions, methods to run before and after a state.
 	fsm.AddEntryAction("closed", fsm.CloseEntryAction)
 	fsm.AddExitAction("closed", fsm.CloseExitAction)
 
@@ -87,7 +87,7 @@ func main() {
 	
 	err:= fsm.Process("lock")
 	fmt.Printf("%s \n", err.Error()) // invalid input, can't lock the door when it's in opened state, this returns error.
-	fmt.Printf("%s \n\n", fsm.GetState().GetName()) // opened, no changes in state.
+	fmt.Printf("%s \n\n", fsm.GetState().GetName()) // opened, no changes in state, proceed as usual.
 }
 ```
 
@@ -97,3 +97,4 @@ func main() {
 Go to the sample DoorFSM for a classic FSM example.
 
 More examples to come.
+

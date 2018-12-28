@@ -7,7 +7,7 @@ import (
 type Action interface {
 	getName() string
 	getActions() []*FSMAction
-	add(action *FSMAction)
+	add(*FSMAction)
 }
 
 type Actions interface {

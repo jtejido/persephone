@@ -5,12 +5,14 @@ import (
 	"github.com/jtejido/persephone"
 )
 
+// STATES
 const (
 	OPENED int = iota
 	CLOSED
 	CLOSED_AND_LOCKED
 )
 
+// INPUTS
 const (
 	OPEN int = iota
 	CLOSE
@@ -103,8 +105,14 @@ func main() {
 	fsm.Process("close")
 	fmt.Printf("%s \n\n", fsm.GetState().GetName())
 
-	// can't do this too when it's just closed, door should be locked
+	// can't do this too when it's just closed, door should be locked first
 	err_a := fsm.Process("unlock")
 	fmt.Printf("%s \n", err_a.Error()) // should stop here now
-	fmt.Printf("%s \n", fsm.GetState().GetName()) // still closed
+	fmt.Printf("%s \n\n", fsm.GetState().GetName()) // still closed
+
+	// Can() checks if you can go to a certain state without tripping the alarm (the callbacks)
+	fmt.Println(fsm.Can("open")) // you can open
+	fmt.Println(fsm.Can("lock")) // or lock
+	fmt.Println(fsm.Can("close")) // but not close
+	fmt.Println(fsm.Can("unlock")) // or unlock
 }
