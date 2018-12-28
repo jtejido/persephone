@@ -8,6 +8,13 @@ type DoorFSM struct {
 	*persephone.AbstractFSM
 }
 
+func NewDoorFSM(states *persephone.States, inputs *persephone.Inputs) *DoorFSM {
+	// pass states and inputs to abstractFSM
+	return &DoorFSM{
+		AbstractFSM: persephone.New(states, inputs),
+	}
+}
+
 func (fsm *DoorFSM) UnlockAction() error {
 	fmt.Println("unlocking the door.")
 	return nil
