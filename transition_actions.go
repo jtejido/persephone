@@ -14,13 +14,13 @@ func newTransitionActions() *TransitionActions {
 	}
 }
 
-func (ta *TransitionActions) AddMap(m *SourceTargetActionMap) {
+func (ta *TransitionActions) addMap(m *SourceTargetActionMap) {
 	ta.actionMap = append(ta.actionMap, m)
 }
 
-func (ta *TransitionActions) GetMapBySourceName(name string) (*SourceTargetActionMap, error) {
+func (ta *TransitionActions) getMapBySourceName(name string) (*SourceTargetActionMap, error) {
 	for _, m := range ta.actionMap {
-		if m.GetSource().GetName() == name {
+		if m.getSource().GetName() == name {
 			return m, nil
 		}
 	}
@@ -40,19 +40,19 @@ func newSourceTargetActionMap(state *State) *SourceTargetActionMap {
 	}
 }
 
-func (sta *SourceTargetActionMap) GetSource() *State {
+func (sta *SourceTargetActionMap) getSource() *State {
 	return sta.source
 }
 
-func (sta *SourceTargetActionMap) AddMap(state *State, action *FSMAction) {
+func (sta *SourceTargetActionMap) addMap(state *State, action *FSMAction) {
 	ta := newTargetAction(state)
-	ta.AddAction(action)
+	ta.addAction(action)
 	sta.actionMap = append(sta.actionMap, ta)
 }
 
-func (sta *SourceTargetActionMap) GetActionsByTargetName(name string) (*TargetActionMap, error) {
+func (sta *SourceTargetActionMap) getActionsByTargetName(name string) (*TargetActionMap, error) {
 	for _, m := range sta.actionMap {
-		if m.GetTarget().GetName() == name {
+		if m.getTarget().GetName() == name {
 			return m, nil
 		}
 	}
@@ -72,14 +72,14 @@ func newTargetAction(state *State) *TargetActionMap {
 	}
 }
 
-func (tam *TargetActionMap) GetTarget() *State {
+func (tam *TargetActionMap) getTarget() *State {
 	return tam.target
 }
 
-func (tam *TargetActionMap) GetActions() []*FSMAction {
+func (tam *TargetActionMap) getActions() []*FSMAction {
 	return tam.actions
 }
 
-func (tam *TargetActionMap) AddAction(action *FSMAction) {
+func (tam *TargetActionMap) addAction(action *FSMAction) {
 	tam.actions = append(tam.actions, action)
 }

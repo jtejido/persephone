@@ -17,6 +17,7 @@ const (
 	UNLOCK
 )
 
+// Sample DoorFSM, a classic one. AbstractFSM will be embedded here (to compensate for Golang's lack of inheritance).
 type DoorFSM struct {
 	*persephone.AbstractFSM
 }
@@ -54,11 +55,12 @@ func main() {
 	// start the door
 	fsm := NewDoorFSM(states, inputs)
 
+	// Call convention pattern is utilized since AbstractFSM is already embedded.
 	// add transition rules
 	fsm.AddRule("opened", "close", "closed", nil)
 	fsm.AddRule("closed", "open", "opened", nil)
 	fsm.AddRule("closed", "lock", "closedAndLocked", nil)
-	fsm.AddRule("closedAndLocked", "unlock", "closed", fsm.UnlockAction) // fourth is trivial; guarding, error firing and stuff.
+	fsm.AddRule("closedAndLocked", "unlock", "closed", fsm.UnlockAction) // fourth is trivial; guarding, syntax error firing and stuff.
 	
 	// Callback on an action, say, actions that affects recognized input when a certain state is triggered.
 	fsm.AddInputAction("closedAndLocked", "unlock", fsm.UnlockAction)

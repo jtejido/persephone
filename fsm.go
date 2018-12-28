@@ -47,15 +47,15 @@ func (qp *AbstractFSM) AddRule(sourceState, input, targetState string, inputActi
 		qp.rules = newRules()
 	}
 
-	r, err := qp.rules.GetRuleBySourceName(sourceState)
+	r, err := qp.rules.getRuleBySourceName(sourceState)
 
 	if err != nil {
-		qp.rules.addRule(NewRule(src, in, tgt))
+		qp.rules.addRule(newRule(src, in, tgt))
 	} else {
-		if r.IsDestinationByInputDefined(input) {
+		if r.isDestinationByInputDefined(input) {
 			panic("Rule for {state,input} pair is already defined.")
 		} else {
-			r.AddTransition(in, tgt)
+			r.addTransition(in, tgt)
 		}
 	}
 
@@ -73,12 +73,12 @@ func (qp *AbstractFSM) AddEntryAction(state string, action FSMMethod) {
 		panic("Undefined state.")
 	}
 
-	if ea, err := qp.entryActions.GetActionsByStateName(st.GetName()); err != nil {
+	if ea, err := qp.entryActions.getActionsByStateName(st.GetName()); err != nil {
 		ea := newEntryAction(st.GetName())
-		ea.Add(act)
-		qp.entryActions.Add(ea)
+		ea.add(act)
+		qp.entryActions.add(ea)
 	} else {
-		ea.Add(act)
+		ea.add(act)
 	}
 
 }
@@ -91,12 +91,12 @@ func (qp *AbstractFSM) AddExitAction(state string, action FSMMethod) {
 		panic("Undefined state.")
 	}
 
-	if ea, err := qp.exitActions.GetActionsByStateName(st.GetName()); err != nil {
+	if ea, err := qp.exitActions.getActionsByStateName(st.GetName()); err != nil {
 		ea := newEntryAction(st.GetName())
-		ea.Add(act)
-		qp.exitActions.Add(ea)
+		ea.add(act)
+		qp.exitActions.add(ea)
 	} else {
-		ea.Add(act)
+		ea.add(act)
 	}
 
 }
@@ -114,17 +114,17 @@ func (qp *AbstractFSM) AddInputAction(state, inputSymbol string, action FSMMetho
 		panic("Undefined input symbol: " + err_i.Error())
 	}
 
-	sia, err := qp.inputActions.GetMapByStateName(src.GetName())
+	sia, err := qp.inputActions.getMapByStateName(src.GetName())
 
 	if err != nil {
 		m := newSourceInputActionMap(src)
-		m.AddMap(in, act)
-		qp.inputActions.AddMap(m)
+		m.addMap(in, act)
+		qp.inputActions.addMap(m)
 	} else {
-		if inAct, err_in := sia.GetActionsByInputName(in.GetName()); err_in != nil {
-			sia.AddMap(in, act)
+		if inAct, err_in := sia.getActionsByInputName(in.GetName()); err_in != nil {
+			sia.addMap(in, act)
 		} else {
-			inAct.AddAction(act)
+			inAct.addAction(act)
 		}
 	}
 
@@ -143,17 +143,17 @@ func (qp *AbstractFSM) AddTransitionAction(sourceState, targetState string, acti
 		panic("Undefined target state: " + err_t.Error())
 	}
 
-	sta, err := qp.transitionActions.GetMapBySourceName(src.GetName())
+	sta, err := qp.transitionActions.getMapBySourceName(src.GetName())
 
 	if err != nil {
 		m := newSourceTargetActionMap(src)
-		m.AddMap(tgt, act)
-		qp.transitionActions.AddMap(m)
+		m.addMap(tgt, act)
+		qp.transitionActions.addMap(m)
 	} else {
-		if tAct, err_in := sta.GetActionsByTargetName(tgt.GetName()); err_in != nil {
-			sta.AddMap(tgt, act)
+		if tAct, err_in := sta.getActionsByTargetName(tgt.GetName()); err_in != nil {
+			sta.addMap(tgt, act)
 		} else {
-			tAct.AddAction(act)
+			tAct.addAction(act)
 		}
 	}
 
@@ -172,21 +172,21 @@ func (qp *AbstractFSM) Process(input string) error {
 		panic("Undefined input symbol: " + err_i.Error())
 	}
 
-	if r, err := qp.rules.GetRuleBySourceName(qp.currentState.GetName()); err != nil {
+	if r, err := qp.rules.getRuleBySourceName(qp.currentState.GetName()); err != nil {
 		return fmt.Errorf("There are no rules left for current state %s: %s", qp.currentState.GetName(), err.Error())
 	} else {
-		if !r.IsDestinationByInputDefined(input) {
+		if !r.isDestinationByInputDefined(input) {
 			return fmt.Errorf("There are no other rules for {%s, %s} pair.", qp.currentState.GetName(), input)
 		} else {
-			targetState = r.GetTransitionByInputName(input).GetDestination()
+			targetState = r.getTransitionByInputName(input).getDestination()
 		}
 	}
 
 	sourceState := qp.currentState
 
-	if exa, err := qp.exitActions.GetActionsByStateName(sourceState.GetName()); err == nil {
+	if exa, err := qp.exitActions.getActionsByStateName(sourceState.GetName()); err == nil {
 		if sourceState.GetName() != targetState.GetName() {
-			for _, action := range exa.GetActions() {
+			for _, action := range exa.getActions() {
 				err := action.DoAction()
 				if err != nil {
 					return err
@@ -195,9 +195,9 @@ func (qp *AbstractFSM) Process(input string) error {
 		}
 	}
 
-	if sia, err := qp.inputActions.GetMapByStateName(sourceState.GetName()); err == nil {
-		if iam, err := sia.GetActionsByInputName(in.GetName()); err == nil {
-			for _, action := range iam.GetActions() {
+	if sia, err := qp.inputActions.getMapByStateName(sourceState.GetName()); err == nil {
+		if iam, err := sia.getActionsByInputName(in.GetName()); err == nil {
+			for _, action := range iam.getActions() {
 				err := action.DoAction()
 				if err != nil {
 					return err
@@ -208,9 +208,9 @@ func (qp *AbstractFSM) Process(input string) error {
 
 	qp.currentState = targetState
 
-	if sta, err := qp.transitionActions.GetMapBySourceName(sourceState.GetName()); err == nil {
-		if tam, err := sta.GetActionsByTargetName(targetState.GetName()); err == nil {
-			for _, action := range tam.GetActions() {
+	if sta, err := qp.transitionActions.getMapBySourceName(sourceState.GetName()); err == nil {
+		if tam, err := sta.getActionsByTargetName(targetState.GetName()); err == nil {
+			for _, action := range tam.getActions() {
 				err := action.DoAction()
 				if err != nil {
 					return err
@@ -219,9 +219,9 @@ func (qp *AbstractFSM) Process(input string) error {
 		}
 	}
 
-	if ena, err := qp.entryActions.GetActionsByStateName(targetState.GetName()); err == nil {
+	if ena, err := qp.entryActions.getActionsByStateName(targetState.GetName()); err == nil {
 		if sourceState.GetName() != targetState.GetName() {
-			for _, action := range ena.GetActions() {
+			for _, action := range ena.getActions() {
 				err := action.DoAction()
 				if err != nil {
 					return err

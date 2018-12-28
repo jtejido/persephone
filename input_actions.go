@@ -14,13 +14,13 @@ func newInputActions() *InputActions {
 	}
 }
 
-func (ia *InputActions) AddMap(m *SourceInputActionMap) {
+func (ia *InputActions) addMap(m *SourceInputActionMap) {
 	ia.actionMap = append(ia.actionMap, m)
 }
 
-func (ia *InputActions) GetMapByStateName(name string) (*SourceInputActionMap, error) {
+func (ia *InputActions) getMapByStateName(name string) (*SourceInputActionMap, error) {
 	for _, m := range ia.actionMap {
-		if m.GetState().GetName() == name {
+		if m.getState().GetName() == name {
 			return m, nil
 		}
 	}
@@ -40,19 +40,19 @@ func newSourceInputActionMap(state *State) *SourceInputActionMap {
 	}
 }
 
-func (sia *SourceInputActionMap) GetState() *State {
+func (sia *SourceInputActionMap) getState() *State {
 	return sia.state
 }
 
-func (sia *SourceInputActionMap) AddMap(input *Input, action *FSMAction) {
+func (sia *SourceInputActionMap) addMap(input *Input, action *FSMAction) {
 	i := newInputAction(input)
-	i.AddAction(action)
+	i.addAction(action)
 	sia.actionMap = append(sia.actionMap, i)
 }
 
-func (sia *SourceInputActionMap) GetActionsByInputName(name string) (*InputActionMap, error) {
+func (sia *SourceInputActionMap) getActionsByInputName(name string) (*InputActionMap, error) {
 	for _, m := range sia.actionMap {
-		if m.GetInput().GetName() == name {
+		if m.getInput().GetName() == name {
 			return m, nil
 		}
 	}
@@ -72,14 +72,14 @@ func newInputAction(input *Input) *InputActionMap {
 	}
 }
 
-func (iam *InputActionMap) GetInput() *Input {
+func (iam *InputActionMap) getInput() *Input {
 	return iam.input
 }
 
-func (iam *InputActionMap) GetActions() []*FSMAction {
+func (iam *InputActionMap) getActions() []*FSMAction {
 	return iam.actions
 }
 
-func (iam *InputActionMap) AddAction(action *FSMAction) {
+func (iam *InputActionMap) addAction(action *FSMAction) {
 	iam.actions = append(iam.actions, action)
 }

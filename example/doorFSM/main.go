@@ -18,7 +18,7 @@ const (
 	UNLOCK
 )
 
-// Sample DoorFSM, a classic one, persephone will be embedded here.
+// Sample DoorFSM, a classic one, persephone will be embedded here (To compensate for Golang's lack of inheritance).
 type DoorFSM struct {
 	*persephone.AbstractFSM
 }
@@ -67,7 +67,8 @@ func main() {
 	fsm := NewDoorFSM(states, inputs)
 
 	// Either do the things below inside the NewDoorFSM, init() or outside.
-	// add transition rules [entryState, input, targetState, transitionCallback]
+	// Call convention pattern is utilized since AbstractFSM is embedded.
+	// Add transition rules [entryState, input, targetState, transitionCallback]
 	fsm.AddRule("opened", "close", "closed", nil)
 	fsm.AddRule("closed", "open", "opened", nil)
 	fsm.AddRule("closed", "lock", "closedAndLocked", nil)

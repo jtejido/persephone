@@ -10,32 +10,32 @@ type Rule struct {
 	transitions []*Transition
 }
 
-func NewRule(src *State, input *Input, dest *State) *Rule {
+func newRule(src *State, input *Input, dest *State) *Rule {
 	r := &Rule{
 		src:         src,
 		transitions: make([]*Transition, 0),
 	}
 
-	r.transitions = append(r.transitions, NewTransition(input, dest))
+	r.transitions = append(r.transitions, newTransition(input, dest))
 
 	return r
 }
 
-func (r *Rule) AddTransition(input *Input, dest *State) {
-	r.transitions = append(r.transitions, NewTransition(input, dest))
+func (r *Rule) addTransition(input *Input, dest *State) {
+	r.transitions = append(r.transitions, newTransition(input, dest))
 }
 
-func (r *Rule) GetSource() *State {
+func (r *Rule) getSource() *State {
 	return r.src
 }
 
-func (r *Rule) GetTransitions() []*Transition {
+func (r *Rule) getTransitions() []*Transition {
 	return r.transitions
 }
 
-func (r *Rule) GetTransitionByInputName(name string) *Transition {
+func (r *Rule) getTransitionByInputName(name string) *Transition {
 	for _, transition := range r.transitions {
-		if transition.GetInput().GetName() == name {
+		if transition.getInput().GetName() == name {
 			return transition
 		}
 	}
@@ -43,9 +43,9 @@ func (r *Rule) GetTransitionByInputName(name string) *Transition {
 	return nil
 }
 
-func (r *Rule) IsDestinationByInputDefined(name string) bool {
+func (r *Rule) isDestinationByInputDefined(name string) bool {
 	for _, transition := range r.transitions {
-		if transition.GetInput().GetName() == name {
+		if transition.getInput().GetName() == name {
 			return true
 		}
 	}
@@ -58,18 +58,18 @@ type Transition struct {
 	dest  *State
 }
 
-func NewTransition(input *Input, dest *State) *Transition {
+func newTransition(input *Input, dest *State) *Transition {
 	return &Transition{
 		input: input,
 		dest:  dest,
 	}
 }
 
-func (t *Transition) GetInput() *Input {
+func (t *Transition) getInput() *Input {
 	return t.input
 }
 
-func (t *Transition) GetDestination() *State {
+func (t *Transition) getDestination() *State {
 	return t.dest
 }
 
@@ -88,9 +88,9 @@ func (rs *Rules) addRule(rule *Rule) {
 	rs.rules = append(rs.rules, rule)
 }
 
-func (rs *Rules) GetRuleBySourceName(name string) (*Rule, error) {
+func (rs *Rules) getRuleBySourceName(name string) (*Rule, error) {
 	for _, rule := range rs.rules {
-		if rule.GetSource().GetName() == name {
+		if rule.getSource().GetName() == name {
 			return rule, nil
 		}
 	}
