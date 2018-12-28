@@ -105,5 +105,5 @@ func main() {
 	// can't do this too when it's just closed, door should be locked
 	err_a := fsm.Process("unlock")
 	fmt.Printf("%s \n", err_a.Error()) // should stop here now
-	fmt.Printf("%s \n", fsm.GetState().GetName())
+	fmt.Printf("%s \n", fsm.GetState().GetName()) // still closed
 }

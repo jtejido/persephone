@@ -4,6 +4,19 @@ Persephone is an Abstract Finite State Machine/Transducer, which means, the prim
 
 
 ```
+const (
+	OPENED int = iota
+	CLOSED
+	CLOSED_AND_LOCKED
+)
+
+const (
+	OPEN int = iota
+	CLOSE
+	LOCK
+	UNLOCK
+)
+
 type DoorFSM struct {
 	*persephone.AbstractFSM
 }
