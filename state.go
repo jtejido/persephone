@@ -55,6 +55,10 @@ func (s *States) Add(state *State) {
 		s.states = make(map[string]*State)
 	}
 
+	if state.GetType() == INITIAL_STATE && s.GetInitialState() != nil {
+		panic("Initial state already set.")
+	}
+
 	s.states[state.GetName()] = state
 }
 
