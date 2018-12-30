@@ -12,6 +12,6 @@ func NewFSMAction(method FSMMethod) *FSMAction {
 	}
 }
 
-func (fsma *FSMAction) DoAction() error {
+func (fsma *FSMAction) Do() error {
 	return fsma.method()
 }

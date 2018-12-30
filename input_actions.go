@@ -45,7 +45,7 @@ func (sia *SourceInputActionMap) getState() *State {
 }
 
 func (sia *SourceInputActionMap) addMap(input *Input, action *FSMAction) {
-	i := newInputAction(input)
+	i := newInputActionMap(input)
 	i.addAction(action)
 	sia.actionMap = append(sia.actionMap, i)
 }
@@ -65,7 +65,7 @@ type InputActionMap struct {
 	actions []*FSMAction
 }
 
-func newInputAction(input *Input) *InputActionMap {
+func newInputActionMap(input *Input) *InputActionMap {
 	return &InputActionMap{
 		input:   input,
 		actions: make([]*FSMAction, 0),
