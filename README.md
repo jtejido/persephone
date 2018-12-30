@@ -36,7 +36,7 @@ func (fsm *DoorFSM) UnlockAction() error {
 
 func main() {
 	/*
-	 * The names act as unique identifier, the first added state is the machine's INITIAL_STATE.
+	 * The names act as unique identifier.
 	 */
 	 
 	// initialize states and inputs. You can do the things below, either inside the NewDoorFSM func, an init() func or outside.
