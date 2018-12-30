@@ -5,50 +5,49 @@ import (
 )
 
 type Input struct {
-	name  string
-	input interface{}
+	Name  string
+	Input interface{}
 }
 
 func NewInput(name string, input interface{}) *Input {
 	return &Input{
-		name:  name,
-		input: input,
+		Name:  name,
+		Input: input,
 	}
 }
 
 func (input Input) GetInput() interface{} {
-	return input.input
+	return input.Input
 }
 
 func (input Input) GetName() string {
-	return input.name
+	return input.Name
 }
 
 type Inputs struct {
-	inputs []*Input
+	inputs map[string]*Input
 }
 
 func NewInputs() *Inputs {
 	return &Inputs{
-		inputs: make([]*Input, 0),
+		inputs: make(map[string]*Input),
 	}
 }
 
-func (inputs *Inputs) Add(name string, input interface{}) {
-	st := &Input{
-		name:  name,
-		input: input,
+func (inputs *Inputs) Add(input *Input) {
+	if inputs.inputs == nil {
+		inputs.inputs = make(map[string]*Input)
 	}
 
-	inputs.inputs = append(inputs.inputs, st)
+	inputs.inputs[input.GetName()] = input
 }
 
-func (inputs Inputs) GetInputByName(name string) (*Input, error) {
-	for _, input := range inputs.inputs {
-		if input.GetName() == name {
-			return input, nil
-		}
+func (inputs Inputs) GetInput(name string) (*Input, error) {
+	v, ok := inputs.inputs[name]
+
+	if !ok {
+		return nil, fmt.Errorf("No Input found for name: %s", name)
 	}
 
-	return nil, fmt.Errorf("No Input found for name: %s", name)
+	return v, nil
 }

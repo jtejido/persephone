@@ -40,17 +40,17 @@ func main() {
 	 */
 	 
 	// initialize states and inputs. You can do the things below, either inside the NewDoorFSM func, an init() func or outside.
-	
-	states := persephone.NewStates()
-	states.Add("opened", OPENED)
-	states.Add("closed", CLOSED)
-	states.Add("closedAndLocked", CLOSED_AND_LOCKED)
 
-	inputs := persephone.NewInputs()
-	inputs.Add("open", OPEN)
-	inputs.Add("close", CLOSE)
-	inputs.Add("lock", LOCK)
-	inputs.Add("unlock", UNLOCK)
+	states := NewStates()
+	states.Add(&persephone.State{"opened", OPENED, INITIAL_STATE})
+	states.Add(&persephone.State{"closed", CLOSED, NORMAL_STATE})
+	states.Add(&persephone.State{"closedAndLocked", CLOSED_AND_LOCKED, NORMAL_STATE})
+
+	inputs := NewInputs()
+	inputs.Add(&persephone.Input{"open", OPEN})
+	inputs.Add(&persephone.Input{"close", CLOSE})
+	inputs.Add(&persephone.Input{"lock", LOCK})
+	inputs.Add(&persephone.Input{"unlock", UNLOCK})
 
 	// start the door
 	fsm := NewDoorFSM(states, inputs)

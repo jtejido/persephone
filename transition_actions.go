@@ -5,38 +5,63 @@ import (
 )
 
 type TransitionActions struct {
-	actionMap []*SourceTargetActionMap
+	actionMap map[string]*SourceTargetActionMap
 }
 
 func newTransitionActions() *TransitionActions {
 	return &TransitionActions{
-		actionMap: make([]*SourceTargetActionMap, 0),
+		actionMap: make(map[string]*SourceTargetActionMap),
 	}
 }
 
-func (ta *TransitionActions) addMap(m *SourceTargetActionMap) {
-	ta.actionMap = append(ta.actionMap, m)
-}
+func (ta *TransitionActions) addMap(src, tgt *State, act Callback) {
 
-func (ta *TransitionActions) getMapBySourceName(name string) (*SourceTargetActionMap, error) {
-	for _, m := range ta.actionMap {
-		if m.getSource().GetName() == name {
-			return m, nil
+	if ta.actionMap == nil {
+		ta.actionMap = make(map[string]*SourceTargetActionMap)
+	}
+
+	sta, _ := ta.getMapBySource(src.GetName())
+
+	if sta != nil {
+		at, err := sta.getActionsByTarget(tgt.GetName())
+
+		if err != nil {
+			sta.addMap(tgt, act)
+
+			return
 		}
+
+		at.addAction(act)
+
+		return
 	}
 
-	return nil, fmt.Errorf("No SourceTargetAction Map found for Source State name: %s", name)
+	m := newSourceTargetActionMap(src)
+	m.addMap(tgt, act)
+	ta.actionMap[src.GetName()] = m
+
+}
+
+func (ta *TransitionActions) getMapBySource(name string) (*SourceTargetActionMap, error) {
+
+	v, ok := ta.actionMap[name]
+
+	if ok {
+		return v, nil
+	}
+
+	return nil, fmt.Errorf("No SourceTargetAction Map found for Source State: %s", name)
 }
 
 type SourceTargetActionMap struct {
 	source    *State
-	actionMap []*TargetActionMap
+	actionMap map[string]*TargetActionMap
 }
 
 func newSourceTargetActionMap(state *State) *SourceTargetActionMap {
 	return &SourceTargetActionMap{
 		source:    state,
-		actionMap: make([]*TargetActionMap, 0),
+		actionMap: make(map[string]*TargetActionMap, 0),
 	}
 }
 
@@ -44,31 +69,35 @@ func (sta *SourceTargetActionMap) getSource() *State {
 	return sta.source
 }
 
-func (sta *SourceTargetActionMap) addMap(state *State, action *FSMAction) {
+func (sta *SourceTargetActionMap) addMap(state *State, action Callback) {
+	if sta.actionMap == nil {
+		sta.actionMap = make(map[string]*TargetActionMap)
+	}
+	
 	ta := newTargetAction(state)
 	ta.addAction(action)
-	sta.actionMap = append(sta.actionMap, ta)
+	sta.actionMap[state.GetName()] = ta
 }
 
-func (sta *SourceTargetActionMap) getActionsByTargetName(name string) (*TargetActionMap, error) {
-	for _, m := range sta.actionMap {
-		if m.getTarget().GetName() == name {
-			return m, nil
-		}
+func (sta *SourceTargetActionMap) getActionsByTarget(name string) (*TargetActionMap, error) {
+	v, ok := sta.actionMap[name]
+
+	if ok {
+		return v, nil
 	}
 
-	return nil, fmt.Errorf("No TargetAction Map found for Target State name: %s", name)
+	return nil, fmt.Errorf("No TargetAction Map found for Target State: %s", name)
 }
 
 type TargetActionMap struct {
 	target  *State
-	actions []*FSMAction
+	actions []Callback
 }
 
 func newTargetAction(state *State) *TargetActionMap {
 	return &TargetActionMap{
 		target:  state,
-		actions: make([]*FSMAction, 0),
+		actions: make([]Callback, 0),
 	}
 }
 
@@ -76,10 +105,10 @@ func (tam *TargetActionMap) getTarget() *State {
 	return tam.target
 }
 
-func (tam *TargetActionMap) getActions() []*FSMAction {
+func (tam *TargetActionMap) getActions() []Callback {
 	return tam.actions
 }
 
-func (tam *TargetActionMap) addAction(action *FSMAction) {
+func (tam *TargetActionMap) addAction(action Callback) {
 	tam.actions = append(tam.actions, action)
 }

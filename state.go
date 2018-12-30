@@ -12,62 +12,50 @@ const (
 )
 
 type State struct {
-	name      string
-	state     interface{}
-	stateType StateType
+	Name      string
+	State     interface{}
+	StateType StateType
 }
 
 func NewState(name string, state interface{}, stateType StateType) *State {
 	return &State{
-		name:      name,
-		state:     state,
-		stateType: stateType,
+		Name:      name,
+		State:     state,
+		StateType: stateType,
 	}
 }
 
 func (state *State) GetState() interface{} {
-	return state.state
+	return state.State
 }
 
 func (state *State) GetName() string {
-	return state.name
+	return state.Name
 }
 
 func (state *State) GetType() StateType {
-	return state.stateType
+	return state.StateType
 }
 
 // Currently, we do not allow removal of a declared state
 type States struct {
-	states []*State
+	states map[string]*State
 }
 
 func NewStates() *States {
 	return &States{
-		states: make([]*State, 0),
+		states: make(map[string]*State),
 	}
 }
 
 // The first state added always has the initial state type
-func (s *States) Add(name string, state interface{}) {
-
-	var state_type = NORMAL_STATE
+func (s *States) Add(state *State) {
 
 	if s.states == nil {
-		s.states = make([]*State, 0)
+		s.states = make(map[string]*State)
 	}
 
-	if len(s.states) <= 0 {
-		state_type = INITIAL_STATE
-	}
-
-	st := &State{
-		name:      name,
-		state:     state,
-		stateType: state_type,
-	}
-
-	s.states = append(s.states, st)
+	s.states[state.GetName()] = state
 }
 
 func (s States) GetInitialState() (state *State) {
@@ -80,12 +68,14 @@ func (s States) GetInitialState() (state *State) {
 	return nil
 }
 
-func (s States) GetStateByName(name string) (*State, error) {
-	for _, state := range s.states {
-		if state.GetName() == name {
-			return state, nil
-		}
+func (s States) GetState(name string) (*State, error) {
+
+	v, ok := s.states[name]
+
+	if !ok {
+		return nil, fmt.Errorf("No State found for name: %s", name)
 	}
 
-	return nil, fmt.Errorf("No State found for name: %s", name)
+	return v, nil
+
 }

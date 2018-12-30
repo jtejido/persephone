@@ -5,37 +5,37 @@ import (
 )
 
 type Action interface {
-	getName() string
-	getActions() []*FSMAction
-	add(*FSMAction)
+	getState() *State
+	getActions() []Callback
+	add(Callback)
 }
 
 type Actions interface {
-	getActionsByStateName(string) Action
+	getActionsByState(string) Action
 	add(Action)
 }
 
 type EntryAction struct {
-	name    string
-	actions []*FSMAction
+	state    *State
+	actions []Callback
 }
 
-func newEntryAction(name string) *EntryAction {
+func newEntryAction(state *State) *EntryAction {
 	return &EntryAction{
-		name:    name,
-		actions: make([]*FSMAction, 0),
+		state:    state,
+		actions: make([]Callback, 0),
 	}
 }
 
-func (ea *EntryAction) getName() string {
-	return ea.name
+func (ea *EntryAction) getState() *State {
+	return ea.state
 }
 
-func (ea *EntryAction) add(action *FSMAction) {
+func (ea *EntryAction) add(action Callback) {
 	ea.actions = append(ea.actions, action)
 }
 
-func (ea *EntryAction) getActions() []*FSMAction {
+func (ea *EntryAction) getActions() []Callback {
 	return ea.actions
 }
 
@@ -53,37 +53,37 @@ func (eas *EntryActions) add(ea Action) {
 	eas.entryActions = append(eas.entryActions, ea)
 }
 
-func (eas *EntryActions) getActionsByStateName(name string) (Action, error) {
+func (eas *EntryActions) getActionsByState(name string) (Action, error) {
 	for _, action := range eas.entryActions {
-		if action.getName() == name {
+		if action.getState().GetName() == name {
 			return action, nil
 		}
 	}
 
-	return nil, fmt.Errorf("No EntryAction found for name: %s", name)
+	return nil, fmt.Errorf("No EntryAction found for state: %s", name)
 }
 
 type ExitAction struct {
-	name    string
-	actions []*FSMAction
+	state    *State
+	actions []Callback
 }
 
-func newExitAction(name string) *ExitAction {
+func newExitAction(state *State) *ExitAction {
 	return &ExitAction{
-		name:    name,
-		actions: make([]*FSMAction, 0),
+		state:    state,
+		actions: make([]Callback, 0),
 	}
 }
 
-func (ea *ExitAction) getName() string {
-	return ea.name
+func (ea *ExitAction) getState() *State {
+	return ea.state
 }
 
-func (ea *ExitAction) getActions() []*FSMAction {
+func (ea *ExitAction) getActions() []Callback {
 	return ea.actions
 }
 
-func (ea *ExitAction) add(action *FSMAction) {
+func (ea *ExitAction) add(action Callback) {
 	ea.actions = append(ea.actions, action)
 }
 
@@ -101,12 +101,12 @@ func (eas *ExitActions) add(ea Action) {
 	eas.exitActions = append(eas.exitActions, ea)
 }
 
-func (eas *ExitActions) getActionsByStateName(name string) (Action, error) {
+func (eas *ExitActions) getActionsByState(name string) (Action, error) {
 	for _, action := range eas.exitActions {
-		if action.getName() == name {
+		if action.getState().GetName() == name {
 			return action, nil
 		}
 	}
 
-	return nil, fmt.Errorf("No ExitAction found for name: %s", name)
+	return nil, fmt.Errorf("No ExitAction found for state: %s", name)
 }

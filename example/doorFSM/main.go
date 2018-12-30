@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/jtejido/persephone"
+	. "github.com/jtejido/persephone"
 )
 
 // STATES
@@ -22,13 +22,13 @@ const (
 
 // Sample DoorFSM, a classic one, persephone will be embedded here (To compensate for Golang's lack of inheritance).
 type DoorFSM struct {
-	*persephone.AbstractFSM
+	*AbstractFSM
 }
 
-func NewDoorFSM(states *persephone.States, inputs *persephone.Inputs) *DoorFSM {
+func NewDoorFSM(states *States, inputs *Inputs) *DoorFSM {
 	// pass states and inputs to abstractFSM
 	return &DoorFSM{
-		AbstractFSM: persephone.New(states, inputs),
+		AbstractFSM: New(states, inputs),
 	}
 }
 
@@ -54,17 +54,17 @@ func (fsm *DoorFSM) CloseExitAction() error {
 
 func main() {
 	// initialize states, either do the things below inside the NewDoorFSM, init() or outside.
-	states := persephone.NewStates()
-	states.Add("opened", OPENED)
-	states.Add("closed", CLOSED)
-	states.Add("closedAndLocked", CLOSED_AND_LOCKED)
+	states := NewStates()
+	states.Add(&State{"opened", OPENED, INITIAL_STATE})
+	states.Add(&State{"closed", CLOSED, NORMAL_STATE})
+	states.Add(&State{"closedAndLocked", CLOSED_AND_LOCKED, NORMAL_STATE})
 
 	// initialize accepted inputs, either do the things below inside the NewDoorFSM, init() or outside.
-	inputs := persephone.NewInputs()
-	inputs.Add("open", OPEN)
-	inputs.Add("close", CLOSE)
-	inputs.Add("lock", LOCK)
-	inputs.Add("unlock", UNLOCK)
+	inputs := NewInputs()
+	inputs.Add(&Input{"open", OPEN})
+	inputs.Add(&Input{"close", CLOSE})
+	inputs.Add(&Input{"lock", LOCK})
+	inputs.Add(&Input{"unlock", UNLOCK})
 
 	fsm := NewDoorFSM(states, inputs)
 
