@@ -7,14 +7,14 @@ import (
 
 // STATES
 const (
-	OPENED int = iota
+	OPENED State = iota
 	CLOSED
 	CLOSED_AND_LOCKED
 )
 
 // INPUTS
 const (
-	OPEN int = iota
+	OPEN Input = iota
 	CLOSE
 	LOCK
 	UNLOCK
@@ -25,7 +25,7 @@ type DoorFSM struct {
 	*AbstractFSM
 }
 
-func NewDoorFSM(states *States, inputs *Inputs) *DoorFSM {
+func NewDoorFSM(states States, inputs Inputs) *DoorFSM {
 	// pass states and inputs to abstractFSM
 	return &DoorFSM{
 		AbstractFSM: New(states, inputs),
@@ -34,6 +34,11 @@ func NewDoorFSM(states *States, inputs *Inputs) *DoorFSM {
 
 func (fsm *DoorFSM) UnlockAction() error {
 	fmt.Println("unlocking action.")
+	return nil
+}
+
+func (fsm *DoorFSM) InputAction() error {
+	fmt.Println("input detected.")
 	return nil
 }
 
@@ -54,65 +59,66 @@ func (fsm *DoorFSM) CloseExitAction() error {
 
 func main() {
 	// initialize states, either do the things below inside the NewDoorFSM, init() or outside.
-	states := NewStates()
-	states.Add(&State{"opened", OPENED, INITIAL_STATE})
-	states.Add(&State{"closed", CLOSED, NORMAL_STATE})
-	states.Add(&State{"closedAndLocked", CLOSED_AND_LOCKED, NORMAL_STATE})
+	var states States
+	states.Add(OPENED, INITIAL_STATE)
+	states.Add(CLOSED, NORMAL_STATE)
+	states.Add(CLOSED_AND_LOCKED, NORMAL_STATE)
 
 	// initialize accepted inputs, either do the things below inside the NewDoorFSM, init() or outside.
-	inputs := NewInputs()
-	inputs.Add(&Input{"open", OPEN})
-	inputs.Add(&Input{"close", CLOSE})
-	inputs.Add(&Input{"lock", LOCK})
-	inputs.Add(&Input{"unlock", UNLOCK})
+	var inputs Inputs
+	inputs.Add(OPEN)
+	inputs.Add(CLOSE)
+	inputs.Add(LOCK)
+	inputs.Add(UNLOCK)
 
 	fsm := NewDoorFSM(states, inputs)
 
 	// Either do the things below inside the NewDoorFSM, init() or outside.
 	// Call convention pattern is utilized since AbstractFSM is embedded.
 	// Add transition rules [entryState, input, targetState, transitionCallback]
-	fsm.AddRule("opened", "close", "closed", nil)
-	fsm.AddRule("closed", "open", "opened", nil)
-	fsm.AddRule("closed", "lock", "closedAndLocked", nil)
-	fsm.AddRule("closedAndLocked", "unlock", "closed", fsm.UnlockAction)
+	fsm.AddRule(OPENED, CLOSE, CLOSED, nil)
+	fsm.AddRule(CLOSED, OPEN, OPENED, nil)
+	fsm.AddRule(CLOSED, LOCK, CLOSED_AND_LOCKED, nil)
+	fsm.AddRule(CLOSED_AND_LOCKED, UNLOCK, CLOSED, fsm.UnlockAction)
 
 	// Callback on an action, say, actions that affects recognized lexemes
-	fsm.AddInputAction("closedAndLocked", "unlock", fsm.UnlockAction)
-	fsm.AddTransitionAction("closed", "opened", fsm.OpenAction)
+	fsm.AddInputAction(CLOSED_AND_LOCKED, UNLOCK, fsm.InputAction)
+	// Sample transition callback when transitioning from closed to opened
+	fsm.AddTransitionAction(CLOSED, OPENED, fsm.OpenAction)
 
 	// Entry and Exit actions
-	fsm.AddEntryAction("closed", fsm.CloseEntryAction)
-	fsm.AddExitAction("closed", fsm.CloseExitAction)
+	fsm.AddEntryAction(CLOSED, fsm.CloseEntryAction)
+	fsm.AddExitAction(CLOSED, fsm.CloseExitAction)
 
-	fsm.Process("close")
-	fmt.Printf("%s \n\n", fsm.GetState().GetName())
+	fsm.Process(CLOSE)
+	fmt.Printf("%d \n\n", fsm.GetState())
 
-	fsm.Process("lock")
-	fmt.Printf("%s \n\n", fsm.GetState().GetName())
+	fsm.Process(LOCK)
+	fmt.Printf("%d \n\n", fsm.GetState())
 
-	fsm.Process("unlock")
-	fmt.Printf("%s \n\n", fsm.GetState().GetName())
+	fsm.Process(UNLOCK)
+	fmt.Printf("%d \n\n", fsm.GetState())
 
-	fsm.Process("open")
-	fmt.Printf("%s \n\n", fsm.GetState().GetName())
+	fsm.Process(OPEN)
+	fmt.Printf("%d \n\n", fsm.GetState())
 
 	// just to check if it accepts invalid transitions
-	err := fsm.Process("lock")
-	fmt.Printf("%s \n", err.Error())                // should stop here now
-	fmt.Printf("%s \n\n", fsm.GetState().GetName()) // still opened, the door's last state.
+	err := fsm.Process(LOCK)
+	fmt.Printf("%s \n", err.Error())      // should stop here now
+	fmt.Printf("%d \n\n", fsm.GetState()) // still opened, the door's last state.
 
 	// just to check if it accepts further valid transitions after previous invalid
-	fsm.Process("close")
-	fmt.Printf("%s \n\n", fsm.GetState().GetName())
+	fsm.Process(CLOSE)
+	fmt.Printf("%d \n\n", fsm.GetState())
 
 	// can't do this too when it's just closed, door should be locked first
-	err_a := fsm.Process("unlock")
-	fmt.Printf("%s \n", err_a.Error()) // should stop here now
-	fmt.Printf("%s \n\n", fsm.GetState().GetName()) // still closed
+	err_a := fsm.Process(UNLOCK)
+	fmt.Printf("%s \n", err_a.Error())    // should stop here now
+	fmt.Printf("%d \n\n", fsm.GetState()) // still closed
 
 	// Can() checks if you can go to a certain state without tripping the alarm (the callbacks)
-	fmt.Println(fsm.Can("open")) // you can open
-	fmt.Println(fsm.Can("lock")) // or lock
-	fmt.Println(fsm.Can("close")) // but not close
-	fmt.Println(fsm.Can("unlock")) // or unlock
+	fmt.Println(fsm.Can(OPEN))   // you can open
+	fmt.Println(fsm.Can(LOCK))   // or lock
+	fmt.Println(fsm.Can(CLOSE))  // but not close
+	fmt.Println(fsm.Can(UNLOCK)) // or unlock
 }
