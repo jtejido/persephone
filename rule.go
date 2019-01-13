@@ -6,104 +6,77 @@ import (
 
 // one source state can have multiple input => dest
 type TransitionMap struct {
-	source         	*State
-	transitions 	[]*Transition
+	transitions map[Input]State
 }
 
-func newTransitionMap(src *State) *TransitionMap {
+func newTransitionMap() *TransitionMap {
 	return &TransitionMap{
-		source:         src,
-		transitions: 	make([]*Transition, 0),
+		transitions: make(map[Input]State, 0),
 	}
 }
 
-func (tr *TransitionMap) addTransition(input *Input, dest *State) {
-	tr.transitions = append(tr.transitions, newTransition(input, dest))
+func (tr *TransitionMap) addTransition(input Input, dest State) {
+	tr.transitions[input] = dest
 }
 
-func (tr *TransitionMap) getSource() *State {
-	return tr.source
-}
+func (tr *TransitionMap) getDestinationByInput(input Input) (State, error) {
 
-func (tr *TransitionMap) getTransitions() []*Transition {
-	return tr.transitions
-}
+	v, ok := tr.transitions[input]
 
-func (tr *TransitionMap) getTransitionByInput(name string) (*Transition, error) {
-	for _, transition := range tr.transitions {
-		if transition.getInput().GetName() == name {
-			return transition, nil
-		}
+	if !ok {
+		return 0, fmt.Errorf("No Transition found for Input: %d", input)
 	}
 
-	return nil, fmt.Errorf("No Transition found for Input: %s", name)
-}
+	return v, nil
 
-// only one destination for one input
-type Transition struct {
-	input *Input
-	dest  *State
-}
-
-func newTransition(input *Input, dest *State) *Transition {
-	return &Transition{
-		input: input,
-		dest:  dest,
-	}
-}
-
-func (t *Transition) getInput() *Input {
-	return t.input
-}
-
-func (t *Transition) getDestination() *State {
-	return t.dest
 }
 
 // State transition table
 type TransitionRules struct {
-	rules []*TransitionMap
+	rules map[State]*TransitionMap
 }
 
 func newTransitionRules() *TransitionRules {
 	return &TransitionRules{
-		rules: make([]*TransitionMap, 0),
+		rules: make(map[State]*TransitionMap, 0),
 	}
 }
 
-func (rs *TransitionRules) addRule(src *State, in *Input, tgt *State) error {
+func (rs *TransitionRules) addRule(src State, in Input, tgt State) error {
 
 	if rs.rules == nil {
-		rs.rules = make([]*TransitionMap, 0)
+		rs.rules = make(map[State]*TransitionMap, 0)
 	}
 
-	r, _ := rs.getRuleBySource(src.GetName())
+	r, _ := rs.getRuleBySource(src)
 
 	if r != nil {
 		// means there's rule for source already, just add input=>dest map
-		ti, _ := r.getTransitionByInput(in.GetName())
+		_, err := r.getDestinationByInput(in)
 
-		if ti != nil {
+		if err == nil {
 			// only one dest by input allowed
 			return fmt.Errorf("Rule for {state,input} pair is already defined.")
 		}
 
+		// replace whatever's in there
 		r.addTransition(in, tgt)
 		return nil
 	}
 
-	tm := newTransitionMap(src)
+	tm := newTransitionMap()
 	tm.addTransition(in, tgt)
-	rs.rules = append(rs.rules, tm)
+	rs.rules[src] = tm
 	return nil
 }
 
-func (rs *TransitionRules) getRuleBySource(name string) (*TransitionMap, error) {
-	for _, rule := range rs.rules {
-		if rule.getSource().GetName() == name {
-			return rule, nil
-		}
+func (rs *TransitionRules) getRuleBySource(src State) (*TransitionMap, error) {
+
+	v, ok := rs.rules[src]
+
+	if !ok {
+		return nil, fmt.Errorf("No Rule found at Source State: %d", src)
 	}
 
-	return nil, fmt.Errorf("No Rule found at Source State: %s", name)
+	return v, nil
 }

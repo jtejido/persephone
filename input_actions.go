@@ -5,106 +5,67 @@ import (
 )
 
 type InputActions struct {
-	actionMap map[string]*SourceInputActionMap
+	actionMap map[State]*InputActionMap
 }
 
 func newInputActions() *InputActions {
 	return &InputActions{
-		actionMap: make(map[string]*SourceInputActionMap),
+		actionMap: make(map[State]*InputActionMap),
 	}
 }
 
-func (ia *InputActions) addMap(src *State, in *Input, act Callback) {
+func (ia *InputActions) addMap(src State, in Input, act Callback) (err error) {
 
-	if ia.actionMap == nil {
-		ia.actionMap = make(map[string]*SourceInputActionMap)
-	}
+	sia, err := ia.getMapByState(src)
 
-	sia, _ := ia.getMapByState(src.GetName())
-
-	if sia != nil {
-		ai, err := sia.getActionsByInput(in.GetName())
-
-		if err != nil {
-			sia.addMap(in, act)
-
-			return
-		}
-
-		ai.addAction(act)
-
+	if err != nil {
 		return
 	}
 
-	m := newSourceInputActionMap(src)
-	m.addMap(in, act)
-	ia.actionMap[src.GetName()] = m
+	if sia != nil {
+		sia.addAction(in, act)
+		return
+	}
 
+	m := newInputActionMap()
+	m.addAction(in, act)
+	ia.actionMap[src] = m
+	return
 }
 
-func (ia *InputActions) getMapByState(name string) (*SourceInputActionMap, error) {
+func (ia *InputActions) getMapByState(state State) (*InputActionMap, error) {
 
-	v, ok := ia.actionMap[name]
+	v, ok := ia.actionMap[state]
 
 	if ok {
 		return v, nil
 	}
 
-	return nil, fmt.Errorf("No SourceInputAction Map found for State: %s", name)
-}
-
-type SourceInputActionMap struct {
-	state     *State
-	actionMap []*InputActionMap
-}
-
-func newSourceInputActionMap(state *State) *SourceInputActionMap {
-	return &SourceInputActionMap{
-		state:     state,
-		actionMap: make([]*InputActionMap, 0),
-	}
-}
-
-func (sia *SourceInputActionMap) getState() *State {
-	return sia.state
-}
-
-func (sia *SourceInputActionMap) addMap(input *Input, action Callback) {
-	i := newInputActionMap(input)
-	i.addAction(action)
-	sia.actionMap = append(sia.actionMap, i)
-}
-
-func (sia *SourceInputActionMap) getActionsByInput(name string) (*InputActionMap, error) {
-	for _, m := range sia.actionMap {
-		if m.getInput().GetName() == name {
-			return m, nil
-		}
-	}
-
-	return nil, fmt.Errorf("No InputAction Map found for Input: %s", name)
+	return nil, fmt.Errorf("No InputAction Map found for State: %d", state)
 }
 
 type InputActionMap struct {
-	input   *Input
-	actions []Callback
+	actionMap map[Input][]Callback
 }
 
-func newInputActionMap(input *Input) *InputActionMap {
+func newInputActionMap() *InputActionMap {
 	return &InputActionMap{
-		input:   input,
-		actions: make([]Callback, 0),
+		actionMap: make(map[Input][]Callback, 0),
 	}
 }
 
-func (iam *InputActionMap) getInput() *Input {
-	return iam.input
+func (ia *InputActionMap) addAction(input Input, action Callback) {
+	ia.actionMap[input] = append(ia.actionMap[input], action)
 }
 
-func (iam *InputActionMap) getActions() []Callback {
-	return iam.actions
-}
+func (ia *InputActionMap) getActionsByInput(input Input) ([]Callback, error) {
 
-func (iam *InputActionMap) addAction(action Callback) {
-	iam.actions = append(iam.actions, action)
+	v, ok := ia.actionMap[input]
+
+	if !ok {
+		return nil, fmt.Errorf("No Actions found for Input: %d", input)
+	}
+
+	return v, nil
+
 }

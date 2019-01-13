@@ -5,29 +5,29 @@ import (
 )
 
 type Action interface {
-	getState() *State
+	getState() State
 	getActions() []Callback
 	add(Callback)
 }
 
 type Actions interface {
-	getActionsByState(string) Action
+	getActionsByState(State) Action
 	add(Action)
 }
 
 type EntryAction struct {
-	state    *State
+	state   State
 	actions []Callback
 }
 
-func newEntryAction(state *State) *EntryAction {
+func newEntryAction(state State) *EntryAction {
 	return &EntryAction{
-		state:    state,
+		state:   state,
 		actions: make([]Callback, 0),
 	}
 }
 
-func (ea *EntryAction) getState() *State {
+func (ea *EntryAction) getState() State {
 	return ea.state
 }
 
@@ -53,29 +53,29 @@ func (eas *EntryActions) add(ea Action) {
 	eas.entryActions = append(eas.entryActions, ea)
 }
 
-func (eas *EntryActions) getActionsByState(name string) (Action, error) {
+func (eas *EntryActions) getActionsByState(state State) (Action, error) {
 	for _, action := range eas.entryActions {
-		if action.getState().GetName() == name {
+		if action.getState() == state {
 			return action, nil
 		}
 	}
 
-	return nil, fmt.Errorf("No EntryAction found for state: %s", name)
+	return nil, fmt.Errorf("No EntryAction found for state: %d", state)
 }
 
 type ExitAction struct {
-	state    *State
+	state   State
 	actions []Callback
 }
 
-func newExitAction(state *State) *ExitAction {
+func newExitAction(state State) *ExitAction {
 	return &ExitAction{
-		state:    state,
+		state:   state,
 		actions: make([]Callback, 0),
 	}
 }
 
-func (ea *ExitAction) getState() *State {
+func (ea *ExitAction) getState() State {
 	return ea.state
 }
 
@@ -101,12 +101,12 @@ func (eas *ExitActions) add(ea Action) {
 	eas.exitActions = append(eas.exitActions, ea)
 }
 
-func (eas *ExitActions) getActionsByState(name string) (Action, error) {
+func (eas *ExitActions) getActionsByState(state State) (Action, error) {
 	for _, action := range eas.exitActions {
-		if action.getState().GetName() == name {
+		if action.getState() == state {
 			return action, nil
 		}
 	}
 
-	return nil, fmt.Errorf("No ExitAction found for state: %s", name)
+	return nil, fmt.Errorf("No ExitAction found for state: %d", state)
 }
