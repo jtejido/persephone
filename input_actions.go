@@ -16,11 +16,7 @@ func newInputActions() *InputActions {
 
 func (ia *InputActions) addMap(src State, in Input, act Callback) (err error) {
 
-	sia, err := ia.getMapByState(src)
-
-	if err != nil {
-		return
-	}
+	sia, _ := ia.getMapByState(src)
 
 	if sia != nil {
 		sia.addAction(in, act)

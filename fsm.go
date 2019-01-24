@@ -148,6 +148,7 @@ func (qp *AbstractFSM) AddInputAction(state State, input Input, action FSMMethod
 		qp.inputActions = newInputActions()
 	}
 
+	// do actions on recognized input
 	return qp.inputActions.addMap(state, input, NewFSMAction(action))
 
 }
@@ -179,7 +180,7 @@ func (qp *AbstractFSM) Process(input Input) error {
 	if !qp.inputs.Contains(input) {
 		panic("Undefined input symbol.")
 	}
-
+	
 	r, err := qp.rules.getRuleBySource(qp.currentState)
 
 	if err != nil {
@@ -241,6 +242,7 @@ func (qp *AbstractFSM) Process(input Input) error {
 	}
 
 	return nil
+
 }
 
 func (qp *AbstractFSM) Can(input Input) (ok bool) {

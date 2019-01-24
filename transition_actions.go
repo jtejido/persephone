@@ -15,11 +15,7 @@ func newTransitionActions() *TransitionActions {
 }
 
 func (ta *TransitionActions) addMap(src, tgt State, act Callback) (err error) {
-	sta, err := ta.getMapBySource(src)
-
-	if err != nil {
-		return
-	}
+	sta, _ := ta.getMapBySource(src)
 
 	if sta != nil {
 		sta.addAction(tgt, act)
