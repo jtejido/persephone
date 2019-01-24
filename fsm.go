@@ -180,7 +180,7 @@ func (qp *AbstractFSM) Process(input Input) error {
 	if !qp.inputs.Contains(input) {
 		panic("Undefined input symbol.")
 	}
-	
+
 	r, err := qp.rules.getRuleBySource(qp.currentState)
 
 	if err != nil {
